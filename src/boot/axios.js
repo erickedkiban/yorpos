@@ -1,7 +1,8 @@
 import { boot } from "quasar/wrappers";
 import axios from "axios";
-import { initializeApp } from "firebase/app";
+import { initializeApp, ini } from "firebase/app";
 import { getAuth, onAuthStateChanged, signOut } from "@firebase/auth";
+import {initializeFirestore} from 'firebase/firestore';
 import {
   getStorage,
   ref,
@@ -31,7 +32,13 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-initializeApp(firebaseConfig);
+const appFireStore = initializeApp(firebaseConfig);
+const auth = getAuth(appFireStore);
+const db = initializeFirestore(appFireStore, {
+  experimentalForceLongPolling: true,
+});
+
+
 export default boot(({ app, router }) => {
   // for use inside Vue files (Options API) through this.$axios and this.$api
   const getCurrentUser = () => {
@@ -75,4 +82,4 @@ export default boot(({ app, router }) => {
   //       so you can easily perform requests against your app's API
 });
 
-export { api };
+export { api, db, auth };
