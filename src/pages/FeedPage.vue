@@ -1,17 +1,16 @@
 <template>
   <div>
-    <div align="right" class="q-ma-lg">
-      <q-btn
-        align="right"
-        style="background-color: #d8e6e9 !important"
-        icon="add"
-        label="Add Product"
-        @click="addModal()"
-        flat
-        dense
-      >
-      </q-btn>
-    </div>
+    <q-btn
+      align="left"
+      class="q-ma-md"
+      style="background-color: #d8e6e9 !important"
+      icon="add"
+      label="Add Product"
+      @click="addModal()"
+      flat
+      dense
+    >
+    </q-btn>
     <div>
       <!-- <q-file v-model="fileme" label="Standard" />
       <q-btn
@@ -36,7 +35,11 @@
 
             <q-input v-model="specifications" label="Specifications"> </q-input>
             <q-input v-model.number="price" label="Price"> </q-input>
-            <q-select v-model="category" :options="optionsCategory" label="Category" />
+            <q-select
+              v-model="category"
+              :options="optionsCategory"
+              label="Category"
+            />
 
             <q-separator />
             <br />
@@ -83,11 +86,35 @@
           align="justify"
           :breakpoint="0"
           v-model="tab"
-        ><q-tab value="all" name="all" icon="list" label="all"  class="hover-tab"/>
+          ><q-tab
+            value="all"
+            name="all"
+            icon="list"
+            label="all"
+            class="hover-tab"
+          />
 
-          <q-tab value="starter" name="starter" icon="lunch_dining" label="Starter"  class="hover-tab"/>
-          <q-tab value="drinks" name="drinks" icon="sports_bar" label="Drinks" class="hover-tab" />
-          <q-tab value="promos" name="promos" icon="fastfood" label="Promos" class="hover-tab" />
+          <q-tab
+            value="starter"
+            name="starter"
+            icon="lunch_dining"
+            label="Starter"
+            class="hover-tab"
+          />
+          <q-tab
+            value="drinks"
+            name="drinks"
+            icon="sports_bar"
+            label="Drinks"
+            class="hover-tab"
+          />
+          <q-tab
+            value="promos"
+            name="promos"
+            icon="fastfood"
+            label="Promos"
+            class="hover-tab"
+          />
         </q-tabs>
         <q-card
           style="background-color: #d8e6e9 !important"
@@ -218,8 +245,8 @@
                               {{ order.price }}
                             </q-item-label>
                           </q-item-section>
-                          <q-item-section>
-                            <q-item-label> QUANTITY </q-item-label>
+                          <q-item-section align="center">
+                            <q-item-label> QTY </q-item-label>
                             <q-label class="text-h5" align="center"
                               >{{ order.order_quantity }}
                             </q-label>
@@ -250,12 +277,10 @@
             <q-separator inset />
 
             <q-card class="my-card">
-              <q-item>
+              <q-item v-if="orders.length !== 0">
                 <q-card-section>
                   <q-item-section>
-                    <q-item-label class="text-h5">
-                      TOTAL AMOUNT:
-                    </q-item-label>
+                    <q-item-label class="text-h5"> TOTAL AMOUNT: </q-item-label>
                   </q-item-section>
                 </q-card-section>
                 <q-card-section>
@@ -370,7 +395,7 @@ import {
   onServerPrefetch,
 } from "vue";
 import { useRouter } from "vue-router";
-import { useQuasar, QSpinnerGears } from 'quasar'
+import { useQuasar, QSpinnerGears } from "quasar";
 import { initializeApp, getApp } from "firebase/app";
 import {
   getFirestore,
@@ -403,12 +428,10 @@ const price = ref(0);
 const pricebefore = ref(0);
 const ratings = ref(2.3);
 const category = ref("");
-const tab = ref("all")
+const tab = ref("all");
 const q = ref(null); // Placeholder for the Firestore query
-    const unsubscribe = ref(null); // Placeholder for the unsubscribe function
-const optionsCategory = ref( [
-        'starter', 'drinks', 'promos',
-      ])
+const unsubscribe = ref(null); // Placeholder for the unsubscribe function
+const optionsCategory = ref(["starter", "drinks", "promos"]);
 const order_quatity = 0;
 const images = "";
 const opened = ref(false);
@@ -424,6 +447,7 @@ const firstFiveCharacters = uuid.value.slice(0, 5);
 const orders = ref([]);
 const grandTot = ref(0);
 const currentYear = new Date().getFullYear();
+const currentUser = ref ("")
 
 const firebaseConfig = {
   apiKey: "AIzaSyDbjhOcP2TgjTn1Me9NxaGLJYjF8i8ktZE",
@@ -450,7 +474,7 @@ async function addModal() {
 }
 const router = useRouter();
 const isLoggedIn = ref(true);
-const $q = useQuasar()
+const $q = useQuasar();
 let auth;
 
 async function Add() {
@@ -511,16 +535,15 @@ const addOrder = (item, quantity = 1) => {
   const formattedDate = currentDate.toLocaleDateString("en-US", options);
 
   const existingOrder = orders.value.find((order) => order.itemId === item.id);
+
   if (existingOrder) {
     // Item already exists in orders, update the quantity
     existingOrder.order_quantity += quantity;
     return;
   }
-
+  currentUser.value = item.userid
   const newOrder = {
     itemId: item.id,
-    userid: item.userid,
-    orderId: "ORDER#" + currentYear + firstFiveCharacters,
     name: item.name,
     price: item.price,
     desc: item.description,
@@ -528,50 +551,57 @@ const addOrder = (item, quantity = 1) => {
     image: item.image,
     orderDate: formattedDate,
     order_quantity: quantity,
-    payment_status: "unpaid",
   };
-  orders.value = [...orders.value, { ...newOrder, grand_total: grandTot }];
+  orders.value = [...orders.value, { ...newOrder }];
   console.log("ORDERS", orders.value);
 };
 async function placeOrder() {
   try {
+    const firstFiveCharacters = uuid.value.slice(0, 5);
+    const currentYear = new Date().getFullYear();
+    const currentDate = new Date();
     const docRef = await addDoc(collection(db, "orders"), {
-      orders: orders.value, // Pass the orders value to the "customerorder" collection
+      orders: orders.value,
+      userId:currentUser.value,
+      payment_status: "unpaid",
+      orderId: "ORDER#" + currentYear + firstFiveCharacters,
+      // Pass the orders value to the "customerorder" collection
     });
+    console.log("docRef ", docRef);
     const dialog = $q.dialog({
-        title: 'Uploading...',
-        dark: true,
-        message: '0%',
-        progress: {
-          spinner: QSpinnerGears,
-          color: 'amber'
-        },
-        persistent: true, // we want the user to not be able to close it
-        ok: false // we want the user to not be able to close it
-      })
+      title: "Uploading...",
+      dark: true,
+      message: "0%",
+      progress: {
+        spinner: QSpinnerGears,
+        color: "amber",
+      },
+      persistent: true, // we want the user to not be able to close it
+      ok: false, // we want the user to not be able to close it
+    });
 
-      // we simulate some progress here...
-      let percentage = 0
-      const interval = setInterval(() => {
-        percentage = Math.min(100, percentage + Math.floor(Math.random() * 22))
+    // we simulate some progress here...
+    let percentage = 0;
+    const interval = setInterval(() => {
+      percentage = Math.min(100, percentage + Math.floor(Math.random() * 22));
 
-        // we update the dialog
+      // we update the dialog
+      dialog.update({
+        message: `${percentage}%`,
+      });
+
+      // if we are done...
+      if (percentage === 100) {
+        clearInterval(interval);
+
         dialog.update({
-          message: `${percentage}%`
-        })
-
-        // if we are done...
-        if (percentage === 100) {
-          clearInterval(interval)
-
-          dialog.update({
-            title: 'Done!',
-            message: 'Upload completed successfully',
-            progress: false,
-            ok: true
-          })
-        }
-      }, 300)
+          title: "Done!",
+          message: "Upload completed successfully",
+          progress: false,
+          ok: true,
+        });
+      }
+    }, 300);
     orders.value = [];
     console.log("Document written with ID: ", docRef.id);
   } catch (e) {
@@ -626,8 +656,8 @@ if (user != null) {
   uid = user.uid;
 }
 watch(tab, (newTab, oldTab) => {
-  console.log("tab", tab)
-  console.log("tab", newTab)
+  console.log("tab", tab);
+  console.log("tab", newTab);
 
   // Unsubscribe from the previous query (if any)
   if (unsubscribe.value) {
@@ -636,18 +666,14 @@ watch(tab, (newTab, oldTab) => {
 
   // Set the initial category value to "starter" if newTab is falsy
   const category = newTab;
-  if(category === "all"){
+  if (category === "all") {
+    q.value = query(collection(db, "iam"), where("userid", "==", uuid.value));
+  } else {
     q.value = query(
-    collection(db, 'iam'),
-    where('userid', '==', uuid.value),
-  );
-  }else{
-    q.value = query(
-    collection(db, 'iam'),
-    where('userid', '==', uuid.value),
-    where('category', '==', category),
-  );
-
+      collection(db, "iam"),
+      where("userid", "==", uuid.value),
+      where("category", "==", category)
+    );
   }
 
   // Update the Firestore query with the new tab value
@@ -661,21 +687,17 @@ watch(tab, (newTab, oldTab) => {
         ...change.doc.data(),
         ...{ id: change.doc.id },
       };
-      if (change.type === 'added') {
+      if (change.type === "added") {
         datassss.value.push(data);
       }
-      if (change.type === 'modified') {
-        console.log('Modified city: ', data);
+      if (change.type === "modified") {
+        console.log("Modified city: ", data);
       }
-      if (change.type === 'removed') {
+      if (change.type === "removed") {
         const index = datassss.value.findIndex(
           (d) => d.name === change.doc.data().name
         );
-        console.log(
-          'Removed city: ',
-          change.doc.data(),
-          change.doc.id
-        );
+        console.log("Removed city: ", change.doc.data(), change.doc.id);
         datassss.value.splice(index, 1);
       }
     });
@@ -703,10 +725,7 @@ onMounted(async () => {
   tab.value = "all";
 
   // Update the Firestore query with the initial tab value
-  q.value = query(
-    collection(db, "iam"),
-    where("userid", "==", uuid.value),
-  );
+  q.value = query(collection(db, "iam"), where("userid", "==", uuid.value));
 
   // Subscribe to the query and update data
   unsubscribe.value = onSnapshot(q.value, (snapshot) => {
@@ -727,11 +746,7 @@ onMounted(async () => {
         const index = datassss.value.findIndex(
           (d) => d.name === change.doc.data().name
         );
-        console.log(
-          "Removed city: ",
-          change.doc.data(),
-          change.doc.id
-        );
+        console.log("Removed city: ", change.doc.data(), change.doc.id);
         datassss.value.splice(index, 1);
       }
     });
@@ -739,8 +754,8 @@ onMounted(async () => {
 });
 </script>
 <style>
-  .hover-tab:hover {
-    background-color: #d8e6e9 !important;
-    border-radius: 20px;
-  }
+.hover-tab:hover {
+  background-color: #d8e6e9 !important;
+  border-radius: 20px;
+}
 </style>

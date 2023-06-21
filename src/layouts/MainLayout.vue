@@ -60,7 +60,7 @@
         <q-space />
 
         <div class="q-gutter-sm row items-center no-wrap">
-          <q-btn round flat @click="handleSignOut ">
+          <q-btn round flat @click="handleSignOut">
             <q-avatar size="26px">
               <img src="https://cdn.quasar.dev/img/boy-avatar.png" />
             </q-avatar>
@@ -185,13 +185,18 @@
           </q-btn>
 
           <q-btn
+          @click="link = 'menu' && $router.push('/menu')"
             round
             flat
             color="grey-8"
             stack
             no-caps
             size="26px"
-            class="GPL__side-btn"
+            :class="[
+              'GPL__side-btn',
+              { 'my-menu-link': isActiveRoute('/orders') },
+            ]"
+            :to="'/orders'"
           >
             <q-icon size="22px" name="dashboard" />
             <div class="GPL__side-btn__label">ORDERS</div>
@@ -219,7 +224,7 @@
 import { ref } from "vue";
 import { useQuasar } from "quasar";
 import { useRouter } from "vue-router";
-import { getAuth,onAuthStateChanged, signOut} from "@firebase/auth";
+import { getAuth, onAuthStateChanged, signOut } from "@firebase/auth";
 
 export default {
   name: "GooglePhotosLayout",
@@ -236,17 +241,19 @@ export default {
       leftDrawerOpen.value = !leftDrawerOpen.value;
     }
     const handleSignOut = () => {
-      console.log("nobaria")
-    const auth = getAuth();
-signOut(auth).then(() => {
-  // Sign-out successful.
-  router.push("/sign-in")
-  console.log('Sign-out successful.')
-}).catch((error) => {
-    router.push("/")
- console.log(error)
-});
-}
+      console.log("nobaria");
+      const auth = getAuth();
+      signOut(auth)
+        .then(() => {
+          // Sign-out successful.
+          router.push("/sign-in");
+          console.log("Sign-out successful.");
+        })
+        .catch((error) => {
+          router.push("/");
+          console.log(error);
+        });
+    };
 
     const isActiveRoute = (routePath) => {
       return router.currentRoute.value.path === routePath;
