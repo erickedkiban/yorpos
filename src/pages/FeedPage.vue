@@ -504,9 +504,10 @@ async function Add() {
       image: image.value,
       ratings: ratings.value,
       percent: (price.value / pricebefore.value) * 100,
-      userid: uuid.value,
+      userid: uniqe.value,
     });
     openedAddModal.value = false;
+    uniqe.value = uniqid()
     (name.value = ""),
       (description.value = ""),
       console.log("Document written with ID: ", docRef.id);
