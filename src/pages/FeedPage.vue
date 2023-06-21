@@ -199,7 +199,7 @@
                       align="right"
                       v-if="orders.length !== 0"
                     >
-                      {{ currentYear }}{{ uuid.slice(0, 5) }}
+                      {{ currentYear }} {{ uniqe }}
                     </q-badge>
                   </div>
                   <q-separator inset />
@@ -385,6 +385,7 @@
 
 <script setup>
 import { nanoid } from "nanoid";
+import uniqid from 'uniqid';
 import {
   onMounted,
   computed,
@@ -440,10 +441,11 @@ const docName = ref("");
 const docDesc = ref("");
 const fileme = ref([]);
 const image = ref("");
+const uniqe = ref(uniqid())
 const editModal = ref(false);
 const openedAddModal = ref(false);
 const uuid = ref("");
-const firstFiveCharacters = uuid.value.slice(0, 5);
+const firstFiveCharacters = uuid.value.slice(0, 7);
 const orders = ref([]);
 const grandTot = ref(0);
 const currentYear = new Date().getFullYear();
@@ -528,8 +530,7 @@ async function editData(item) {
 }
 
 const addOrder = (item, quantity = 1) => {
-  const firstFiveCharacters = uuid.value.slice(0, 5);
-  const currentYear = new Date().getFullYear();
+
   const currentDate = new Date();
   const options = { month: "short", day: "numeric", year: "numeric" };
   const formattedDate = currentDate.toLocaleDateString("en-US", options);
@@ -557,14 +558,13 @@ const addOrder = (item, quantity = 1) => {
 };
 async function placeOrder() {
   try {
-    const firstFiveCharacters = uuid.value.slice(0, 5);
     const currentYear = new Date().getFullYear();
     const currentDate = new Date();
     const docRef = await addDoc(collection(db, "orders"), {
       orders: orders.value,
       userId:currentUser.value,
       payment_status: "unpaid",
-      orderId: "ORDER#" + currentYear + firstFiveCharacters,
+      orderId: "ORDER#" + currentYear + uniqe.value,
       // Pass the orders value to the "customerorder" collection
     });
     console.log("docRef ", docRef);
@@ -593,7 +593,6 @@ async function placeOrder() {
       // if we are done...
       if (percentage === 100) {
         clearInterval(interval);
-
         dialog.update({
           title: "Done!",
           message: "Upload completed successfully",
@@ -603,6 +602,7 @@ async function placeOrder() {
       }
     }, 300);
     orders.value = [];
+    uniqe.value = uniqid()
     console.log("Document written with ID: ", docRef.id);
   } catch (e) {
     console.error("Error adding document: ", e);
