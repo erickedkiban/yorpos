@@ -634,13 +634,7 @@ async function confirmed() {
   await getDatawithAllTabs(); // Load all the data again
 }
 
-async function editData(item, itemId) {
-  name.value = item.name;
-  specifications.value = item.specifications;
-  price.value = item.price;
-  editModal.value = true;
-  docId.value = itemId; // Assign the document ID to the docId.value variable
-}
+
 
 
 onServerPrefetch(async () => {
@@ -731,6 +725,14 @@ function cancelEdit() {
   editModal.value = false;
 }
 
+async function editData(item, itemId) {
+  name.value = item.name;
+  specifications.value = item.specifications;
+  price.value = item.price;
+  category.value = item.category
+  editModal.value = true;
+  docId.value = itemId; // Assign the document ID to the docId.value variable
+}
 async function saveEdit() {
   editModal.value = false;
   console.log("tehatal");
