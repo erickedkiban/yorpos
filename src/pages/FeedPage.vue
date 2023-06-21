@@ -504,7 +504,7 @@ async function Add() {
       image: image.value,
       ratings: ratings.value,
       percent: (price.value / pricebefore.value) * 100,
-      userid: uniqe.value,
+      userid: uuid.value,
     });
     openedAddModal.value = false;
     uniqe.value = uniqid()
