@@ -168,7 +168,7 @@
               color="secondary"
               class="q-mr-md"
               icon="edit"
-              @click="editData(item)"
+              @click="editData(item, item.id)"
             />
             <q-btn
               color="negative"
@@ -314,8 +314,13 @@
             <div class="text-subtitle2">
               <q-input v-model="name" label="Item name" />
               <q-input v-model="specifications" label="Specifications" />
+              <q-select
+              v-model="category"
+              :options="optionsCategory"
+              label="Category"
+            />
               <q-input v-model="price" label="Price" />
-              <q-file
+              <!-- <q-file
                 filled
                 bottom-slots
                 v-model="fileme"
@@ -340,6 +345,7 @@
                   alt="productImage"
                 />
               </div>
+            </div> -->
             </div>
           </q-card-section>
 
@@ -385,7 +391,7 @@
 
 <script setup>
 import { nanoid } from "nanoid";
-import uniqid from 'uniqid';
+import uniqid from "uniqid";
 import {
   onMounted,
   computed,
@@ -441,7 +447,7 @@ const docName = ref("");
 const docDesc = ref("");
 const fileme = ref([]);
 const image = ref("");
-const uniqe = ref(uniqid())
+const uniqe = ref(uniqid());
 const editModal = ref(false);
 const openedAddModal = ref(false);
 const uuid = ref("");
@@ -449,7 +455,7 @@ const firstFiveCharacters = uuid.value.slice(0, 7);
 const orders = ref([]);
 const grandTot = ref(0);
 const currentYear = new Date().getFullYear();
-const currentUser = ref ("")
+const currentUser = ref("");
 
 const firebaseConfig = {
   apiKey: "AIzaSyDbjhOcP2TgjTn1Me9NxaGLJYjF8i8ktZE",
@@ -507,8 +513,8 @@ async function Add() {
       userid: uuid.value,
     });
     openedAddModal.value = false;
-    uniqe.value = uniqid()
-    (name.value = ""),
+    await getDatawithAllTabs(); // Load all the data again
+    (uniqe.value = uniqid()((name.value = ""))),
       (description.value = ""),
       console.log("Document written with ID: ", docRef.id);
   } catch (e) {
@@ -522,16 +528,7 @@ async function openedpassData(item) {
   opened.value = true;
 }
 
-async function editData(item) {
-  name.value = item.name;
-  specifications.value = item.specifications;
-  price.value = item.price;
-  fileme.value.push(item.image);
-  editModal.value = true;
-}
-
 const addOrder = (item, quantity = 1) => {
-
   const currentDate = new Date();
   const options = { month: "short", day: "numeric", year: "numeric" };
   const formattedDate = currentDate.toLocaleDateString("en-US", options);
@@ -543,7 +540,7 @@ const addOrder = (item, quantity = 1) => {
     existingOrder.order_quantity += quantity;
     return;
   }
-  currentUser.value = item.userid
+  currentUser.value = item.userid;
   const newOrder = {
     itemId: item.id,
     name: item.name,
@@ -563,7 +560,7 @@ async function placeOrder() {
     const currentDate = new Date();
     const docRef = await addDoc(collection(db, "orders"), {
       orders: orders.value,
-      userId:currentUser.value,
+      userId: currentUser.value,
       payment_status: "unpaid",
       orderId: "ORDER#" + currentYear + uniqe.value,
       // Pass the orders value to the "customerorder" collection
@@ -603,7 +600,7 @@ async function placeOrder() {
       }
     }, 300);
     orders.value = [];
-    uniqe.value = uniqid()
+    uniqe.value = uniqid();
     console.log("Document written with ID: ", docRef.id);
   } catch (e) {
     console.error("Error adding document: ", e);
@@ -634,7 +631,18 @@ const cancelOrder = () => {
 async function confirmed() {
   opened.value = false;
   await deleteDoc(doc(db, "iam", docId.value));
+  await getDatawithAllTabs(); // Load all the data again
 }
+
+async function editData(item, itemId) {
+  name.value = item.name;
+  specifications.value = item.specifications;
+  price.value = item.price;
+  editModal.value = true;
+  docId.value = itemId; // Assign the document ID to the docId.value variable
+}
+
+
 onServerPrefetch(async () => {
   auth = getAuth();
   onAuthStateChanged(auth, (user) => {
@@ -692,7 +700,8 @@ watch(tab, (newTab, oldTab) => {
         datassss.value.push(data);
       }
       if (change.type === "modified") {
-        console.log("Modified city: ", data);
+        datassss.value.pop(data);
+        console.log("Modified data: ", data);
       }
       if (change.type === "removed") {
         const index = datassss.value.findIndex(
@@ -721,37 +730,59 @@ const handleSignOut = () => {
 function cancelEdit() {
   editModal.value = false;
 }
-onMounted(async () => {
+
+async function saveEdit() {
+  editModal.value = false;
+  console.log("tehatal");
+
+  const updatedData = {
+    name: name.value,
+    category:category.value,
+    specifications: specifications.value,
+    price: price.value,
+  };
+
+  await updateDoc(doc(db, "iam", docId.value), updatedData);
+  await getDatawithAllTabs(); // Load all the data again
+
+}
+
+async function getDatawithAllTabs() {
   // Set the initial tab value to "starter"
-  tab.value = "all";
 
-  // Update the Firestore query with the initial tab value
-  q.value = query(collection(db, "iam"), where("userid", "==", uuid.value));
+    tab.value = "all";
 
-  // Subscribe to the query and update data
-  unsubscribe.value = onSnapshot(q.value, (snapshot) => {
-    datassss.value = []; // Clear previous data
+    // Update the Firestore query with the initial tab value
+    q.value = query(collection(db, "iam"), where("userid", "==", uuid.value));
 
-    snapshot.docChanges().forEach((change) => {
-      var data = {
-        ...change.doc.data(),
-        ...{ id: change.doc.id },
-      };
-      if (change.type === "added") {
-        datassss.value.push(data);
-      }
-      if (change.type === "modified") {
-        console.log("Modified city: ", data);
-      }
-      if (change.type === "removed") {
-        const index = datassss.value.findIndex(
-          (d) => d.name === change.doc.data().name
-        );
-        console.log("Removed city: ", change.doc.data(), change.doc.id);
-        datassss.value.splice(index, 1);
-      }
+    // Subscribe to the query and update data
+    unsubscribe.value = onSnapshot(q.value, (snapshot) => {
+      datassss.value = []; // Clear previous data
+
+      snapshot.docChanges().forEach((change) => {
+        var data = {
+          ...change.doc.data(),
+          ...{ id: change.doc.id },
+        };
+        if (change.type === "added") {
+          datassss.value.push(data);
+        }
+        if (change.type === "modified") {
+          console.log("Modified city: ", data);
+        }
+        if (change.type === "removed") {
+          const index = datassss.value.findIndex(
+            (d) => d.name === change.doc.data().name
+          );
+          console.log("Removed city: ", change.doc.data(), change.doc.id);
+          datassss.value.splice(index, 1);
+        }
+      });
     });
-  });
+}
+
+onMounted(async () => {
+  getDatawithAllTabs();
 });
 </script>
 <style>

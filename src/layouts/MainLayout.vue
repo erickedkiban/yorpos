@@ -62,7 +62,8 @@
         <div class="q-gutter-sm row items-center no-wrap">
           <q-btn round flat @click="handleSignOut">
             <q-avatar size="26px">
-              <img src="https://cdn.quasar.dev/img/boy-avatar.png" />
+              <q-icon name="logout"></q-icon>
+
             </q-avatar>
             <q-tooltip>Log out</q-tooltip>
           </q-btn>
@@ -211,8 +212,10 @@
             size="26px"
             class="GPL__side-btn"
           >
-            <q-icon size="22px" name="settings" />
-            <div class="GPL__side-btn__label">SETTINGS</div>
+          <q-avatar size="30px">
+          <img :src="photoURL"  />
+          <q-tooltip>{{displayName}}</q-tooltip>
+            </q-avatar>
           </q-btn>
         </div>
       </q-page-sticky>
@@ -236,6 +239,11 @@ export default {
 
     const $q = useQuasar();
     const router = useRouter();
+    const user = getAuth().currentUser;
+    const displayName = ref(user.displayName)
+    console.log("user",user)
+    const photoURL = ref(user.photoURL)
+
 
     function toggleLeftDrawer() {
       leftDrawerOpen.value = !leftDrawerOpen.value;
@@ -261,6 +269,8 @@ export default {
 
     return {
       leftDrawerOpen,
+      displayName,
+      photoURL,
       handleSignOut,
       router,
       search,
