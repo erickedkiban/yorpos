@@ -1,4 +1,8 @@
 <template>
+  <q-separator
+    vertical
+    style="color: #d8dbd9; height: 100vh; position: fixed; right: 590px"
+  />
   <q-page class="q-ma-lg" style="min-height: 0 !important">
     <div>
       <div class="row">
@@ -8,7 +12,12 @@
               order #: {{ orderId }}
             </div>
             <div class="flex justify-end">
-              <q-checkbox style="position: relative; top: -10px;" v-model="selectedTables" :val="orderId" dense />
+              <q-checkbox
+                style="position: relative; top: -10px"
+                v-model="selectedTables"
+                :val="orderId"
+                dense
+              />
             </div>
             <q-separator style="color: #d8dbd9" />
             <q-table
@@ -35,6 +44,7 @@
             </q-table>
           </div>
         </div>
+
         <div class="col-4">
           <div class="q-pl-xl">
             <div class="text-h5 text-weight-light text-uppercase">
@@ -105,10 +115,21 @@
             </div>
             <div class="q-mt-xl">
               <q-btn
+                v-if="!cashReceived || cashReceived < totalPrice"
+                disabled
                 style="background: #8bb5be; width: 100%"
                 class="text-uppercase text-h5"
+                >Pay Now</q-btn
               >
-                Pay Now
+              <q-btn
+                v-else
+                @click="paynow"
+                style="background: #8bb5be; width: 100%"
+                class="text-uppercase text-h5"
+                :disable="loading"
+              >
+                <span v-if="!loading">Pay Now</span>
+                <q-spinner-hourglass v-else color="white" />
               </q-btn>
             </div>
           </div>
@@ -120,6 +141,7 @@
 
 <script>
 import { ref, getCurrentInstance, onMounted, computed, watch } from "vue";
+import { useQuasar, Notify } from "quasar";
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import {
@@ -133,6 +155,7 @@ import {
   deleteDoc,
   updateDoc,
   getDocs,
+  Timestamp,
 } from "firebase/firestore";
 
 const columns = [
@@ -161,6 +184,8 @@ const columns = [
 
 export default {
   setup() {
+    const loading = ref(false);
+    const $q = useQuasar();
     const selectedTables = ref([]);
     const cashReceived = ref(null);
     const uuid = ref("");
@@ -245,6 +270,80 @@ export default {
       orders.value = orders.value.filter((order) => order.orderId !== orderId);
     }
 
+    async function paynow() {
+      const currentUser = getAuth().currentUser;
+      if (currentUser) {
+        const selectedOrderIds = selectedTables.value;
+        const matchingOrders = orders.value.filter((order) =>
+          selectedOrderIds.includes(order.orderId)
+        );
+
+        console.log("Selected Order IDs:", selectedOrderIds);
+        console.log("Matching Orders:", matchingOrders);
+
+        if (matchingOrders.length > 0) {
+          const totalCashReceived = cashReceived.value;
+          const totalAmount = totalPrice.value;
+          const change = totalCashReceived - totalAmount;
+
+          try {
+            loading.value = true;
+            // Update the payment status of the orders to "paid"
+            for (const orderId of selectedOrderIds) {
+              const orderQuery = query(
+                collection(db, "orders"),
+                where("orderId", "==", orderId)
+              );
+              const querySnapshot = await getDocs(orderQuery);
+
+              querySnapshot.forEach(async (doc) => {
+                const orderDocRef = doc.ref;
+                console.log("Order Doc Ref:", orderDocRef);
+                await updateDoc(orderDocRef, {
+                  payment_status: "paid",
+                });
+              });
+            }
+
+            // Update the payment status in the report collection
+            const reportData = {
+              orders: matchingOrders.map((order) => {
+                return {
+                  ...order,
+                  payment_status: "paid",
+                };
+              }),
+              cashReceived: totalCashReceived,
+              change: change > 0 ? change : 0,
+              timestamp: Timestamp.now(),
+            };
+
+            const reportsCollectionRef = collection(db, "report");
+            await addDoc(reportsCollectionRef, reportData);
+
+            // Clear the selected tables and cash received
+            selectedTables.value = [];
+            cashReceived.value = null;
+
+            // Refresh the orders data
+            setTimeout(() => {
+              loading.value = false;
+              $q.notify({
+                message: "Payment successful!",
+                position: "top",
+                timeout: 2000,
+              });
+            }, 500);
+            await getData();
+          } catch (error) {
+            console.error("Error while processing payment:", error);
+            // Handle error scenarios.
+            loading.value = false;
+          }
+        }
+      }
+    }
+
     watch(selectedTables, (newValue) => {
       if (newValue.length === 0) {
         cashReceived.value = null;
@@ -254,6 +353,8 @@ export default {
     onMounted(getData);
 
     return {
+      loading,
+      paynow,
       selectedTables,
       cashReceived,
       uuid,
