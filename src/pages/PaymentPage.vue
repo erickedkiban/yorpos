@@ -6,7 +6,12 @@
   <q-page class="q-ma-lg" style="min-height: 0 !important">
     <div>
       <div class="row">
-        <div v-if="segregatedOrders.length > 0" class="col-8">
+        <div class="col-8" v-if="orders.length === 0">
+          <q-banner inline-actions class="text-white bg-red">
+            No order found.
+          </q-banner>
+        </div>
+        <div v-else class="col-8">
           <div v-for="orderId in Object.keys(segregatedOrders)" :key="orderId">
             <div class="text-h5 text-weight-light text-uppercase q-mb-sm">
               order #: {{ orderId }}
@@ -43,11 +48,6 @@
               </template>
             </q-table>
           </div>
-        </div>
-        <div v-else class="col-8">
-          <q-banner inline-actions class="text-white bg-red">
-            No order found.
-          </q-banner>
         </div>
 
         <div class="col-4">
