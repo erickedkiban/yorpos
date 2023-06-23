@@ -1,8 +1,13 @@
 <template>
-  <q-separator
-    vertical
-    style="color: #d8dbd9; height: 100vh; position: fixed; right: 590px"
-  />
+  <div class="row">
+    <div class="col-8"></div>
+    <div class="col-4">
+      <q-separator
+        vertical
+        style="color: #d8dbd9; height: 100vh; position: fixed;"
+      />
+    </div>
+  </div>
   <q-page class="q-ma-lg" style="min-height: 0 !important">
     <div>
       <div class="row">
@@ -34,6 +39,7 @@
               :columns="columns"
               row-key="name"
               hide-header
+              :pagination.sync="pagination"
             >
               <template v-slot:bottom>
                 <div class="q-pt-lg q-pb-lg" style="width: 100%">
@@ -199,6 +205,14 @@ export default {
     const app1 = initializeApp(app.$firebaseConfig);
     const db = getFirestore(app1);
 
+    const pagination = ref({
+      sortBy: "desc",
+      descending: false,
+      page: 1,
+      rowsPerPage: 10,
+      rowsNumber: 5,
+    });
+
     const selectedOrders = computed(() => {
       const selected = [];
       for (const orderId of selectedTables.value) {
@@ -358,6 +372,7 @@ export default {
     onMounted(getData);
 
     return {
+      pagination,
       loading,
       paynow,
       selectedTables,
