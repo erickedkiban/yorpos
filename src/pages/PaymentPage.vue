@@ -4,7 +4,7 @@
     <div class="col-4">
       <q-separator
         vertical
-        style="color: #d8dbd9; height: 100vh; position: fixed;"
+        style="color: #d8dbd9; height: 100vh; position: fixed"
       />
     </div>
   </div>
@@ -29,19 +29,19 @@
                 dense
               />
             </div>
-            <q-separator style="color: #d8dbd9" />
+            <!-- <q-separator style="color: #d8dbd9" /> -->
             <q-table
-              grid
-              grid-header
+              class="q-mb-lg"
               flat
               bordered
-              :rows="segregatedOrders[orderId]"
+              title="Treats"
               :columns="columns"
               row-key="name"
-              hide-header
-              :pagination.sync="pagination"
+              binary-state-sort
+              :rows="segregatedOrders[orderId]"
+              :pagination="pagination"
             >
-              <template v-slot:bottom>
+              <template v-slot:top>
                 <div class="q-pt-lg q-pb-lg" style="width: 100%">
                   <q-btn
                     push
@@ -51,6 +51,37 @@
                     @click="cancelOrder(orderId)"
                   />
                 </div>
+              </template>
+              <template v-slot:body="props">
+                <q-tr :props="props">
+                  <q-td key="item" :props="props">
+                    <div class="flex items-center">
+                      <span class="q-mr-md">{{ props.rowIndex + 1 }}</span>
+                      <img
+                        :src="props.row.image"
+                        alt="Item Image"
+                        style="width: 50px; height: 50px; object-fit: cover"
+                      />
+                      <span class="q-ml-md">{{ props.row.name }}</span>
+                    </div>
+                  </q-td>
+                  <q-td key="price" :props="props">
+                    {{ props.row.price }}
+                  </q-td>
+                  <q-td key="qty" :props="props">
+                    {{ props.row.order_quantity }}
+                  </q-td>
+                  <!-- <q-td key="actions" :props="props">
+                    <q-btn
+                      dense
+                      flat
+                      round
+                      icon="delete"
+                      color="negative"
+                      @click="removeRow(props.row)"
+                    />
+                  </q-td> -->
+                </q-tr>
               </template>
             </q-table>
           </div>
@@ -191,6 +222,13 @@ const columns = [
     field: (row) => row.order_quantity,
     sortable: true,
   },
+  // {
+  //   name: "actions",
+  //   align: "center",
+  //   label: "Actions",
+  //   field: "actions",
+  //   sortable: false,
+  // },
 ];
 
 export default {
@@ -206,11 +244,10 @@ export default {
     const db = getFirestore(app1);
 
     const pagination = ref({
-      sortBy: "desc",
-      descending: false,
       page: 1,
       rowsPerPage: 10,
-      rowsNumber: 5,
+      sortBy: "desc",
+      descending: false,
     });
 
     const selectedOrders = computed(() => {
@@ -241,7 +278,7 @@ export default {
         }
         const items = order.orders.map((item) => {
           const total = item.price * item.order_quantity;
-          return { ...item, total };
+          return { ...item, total, actions: null };
         });
         segregated[orderId].push(...items);
       });
@@ -288,6 +325,38 @@ export default {
       // Remove the order from the orders array
       orders.value = orders.value.filter((order) => order.orderId !== orderId);
     }
+
+    // async function removeRow(row) {
+    //   try {
+    //     const confirm = await $q.dialog({
+    //       title: "Confirmation",
+    //       message: "Are you sure you want to remove this item?",
+    //       cancel: true,
+    //       persistent: true,
+    //     });
+
+    //     if (confirm) {
+    //       // Remove the row from the table
+    //       const orderId = row.orderId;
+    //       const index = segregatedOrders.value[orderId].findIndex(
+    //         (item) => item.name === row.name
+    //       );
+    //       if (index !== -1) {
+    //         segregatedOrders.value[orderId].splice(index, 1);
+    //       }
+
+    //       // Update the database or perform any other necessary actions
+
+    //       $q.notify({
+    //         message: "Item removed successfully!",
+    //         position: "top",
+    //         timeout: 2000,
+    //       });
+    //     }
+    //   } catch (error) {
+    //     console.error("Error while removing item:", error);
+    //   }
+    // }
 
     async function paynow() {
       const currentUser = getAuth().currentUser;
@@ -372,7 +441,6 @@ export default {
     onMounted(getData);
 
     return {
-      pagination,
       loading,
       paynow,
       selectedTables,
@@ -385,6 +453,8 @@ export default {
       segregatedOrders,
       cancelOrder,
       dense: ref(false),
+      pagination,
+      // removeRow,
     };
   },
 };
