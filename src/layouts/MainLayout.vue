@@ -129,7 +129,7 @@
 
       <q-page-sticky v-if="$q.screen.gt.sm" expand position="left">
         <div class="fit q-pt-lg q-px-sm column">
-          <q-btn
+          <!-- <q-btn
             round
             flat
             color="grey-8"
@@ -140,7 +140,7 @@
           >
             <q-icon size="22px" name="tablet" />
             <div class="GPL__side-btn__label">TABLES</div>
-          </q-btn>
+          </q-btn> -->
 
           <q-btn
             @click="link = 'menu' && $router.push('/menu')"
@@ -213,7 +213,7 @@
             class="GPL__side-btn"
           >
           <q-avatar size="30px">
-          <img :src="photoURL"  />
+            <img src="https://cdn.quasar.dev/img/boy-avatar.png">
           <q-tooltip>{{displayName}}</q-tooltip>
             </q-avatar>
           </q-btn>
@@ -224,7 +224,7 @@
 </template>
 
 <script>
-import { ref } from "vue";
+import { ref , onMounted} from "vue";
 import { useQuasar } from "quasar";
 import { useRouter } from "vue-router";
 import { getAuth, onAuthStateChanged, signOut } from "@firebase/auth";
@@ -243,6 +243,7 @@ export default {
     const displayName = ref(user.displayName)
     console.log("user",user)
     const photoURL = ref(user.photoURL)
+    console.log(photoURL.value )
 
 
     function toggleLeftDrawer() {
@@ -266,6 +267,10 @@ export default {
     const isActiveRoute = (routePath) => {
       return router.currentRoute.value.path === routePath;
     };
+
+    onMounted(async () => {
+      photoURL.value;
+});
 
     return {
       leftDrawerOpen,

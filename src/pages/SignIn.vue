@@ -1,13 +1,13 @@
 <template>
  <div>
-    <div class="q-pa-lg row justify-center  " >
+    <div class="q-pa-lg row justify-center q-mt-lg  " >
 
-      <q-card class="my-card flat unbordered " flat unbordered >
+      <q-card class="my-card flat unbordered q-mt-lg " flat unbordered >
 <img
       alt="Quasar logo"
       src="~assets/yorpost.png"
     >
-      <q-card-section>
+      <q-card-section class="q-mt-lg">
         <div class="text-h6 text-white">   <q-input class="text-white" label="Email"  outlined v-model="email"></q-input></div> <br />
         <div class="text-subtitle2">      <q-input class="text-white"  label="Password" outlined v-model="password"></q-input></div>
 
@@ -53,11 +53,9 @@ const errMsg = ref();
 const register = () => {
   signInWithEmailAndPassword(getAuth(), email.value, password.value)
     .then((data) => {
-      console.log("success");
       router.push("/menu");
     })
     .catch((error) => {
-      console.log(error.code);
       // alert(error.message);
       switch (error.code){
         case "auth/invalid-email":
@@ -83,11 +81,10 @@ const SignInWithGoogle = () => {
   const provider = new GoogleAuthProvider();
   signInWithPopup(getAuth(), provider)
     .then((result) => {
-        console.log(result.user);
         router.push("/menu")
     })
     .catch((error) => {
-        console.log(error)
+      return error;
     });
 };
 </script>

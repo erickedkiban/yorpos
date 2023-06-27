@@ -1,16 +1,6 @@
 <template>
   <div>
-    <q-btn
-      align="left"
-      class="q-ma-md"
-      style="background-color: #d8e6e9 !important"
-      icon="add"
-      label="Add Product"
-      @click="addModal()"
-      flat
-      dense
-    >
-    </q-btn>
+
     <div>
       <!-- <q-file v-model="fileme" label="Standard" />
       <q-btn
@@ -81,6 +71,17 @@
     <!-- now -->
     <div class="row">
       <div class="col-9 row" style="align-items: flex-start">
+        <q-btn
+      class="q-ma-md"
+      style="background-color: #d8e6e9 !important"
+      icon="add"
+      label="Add Product"
+      @click="addModal()"
+      flat
+      dense
+    >
+    </q-btn>
+
         <q-tabs
           class="q-ma-sm col-11 row"
           align="justify"
@@ -116,6 +117,7 @@
             class="hover-tab"
           />
         </q-tabs>
+
         <q-card
           style="background-color: #d8e6e9 !important"
           @mouseover="targetEl = true"
@@ -180,7 +182,7 @@
         </q-card>
       </div>
       <!-- NEXT -->
-      <div class="col row">
+      <div class="col row q-mt-md">
         <div>
           <q-card
             flat
@@ -421,7 +423,6 @@ import {
   ref as storageRef,
   getDownloadURL as stogegetDownloadURL,
 } from "@firebase/storage";
-console.log("NANOID", nanoid());
 import { getAuth, onAuthStateChanged, signOut } from "@firebase/auth";
 const app = getCurrentInstance().appContext.config.globalProperties;
 
@@ -487,16 +488,13 @@ let auth;
 
 async function Add() {
   const forestRef = ref(storage, fileme.value.name.toString());
-  console.log("forestRef", forestRef);
   const mountainsRef = storageRef(storage, fileme.value.name.toString());
   await app.$uploadBytes(mountainsRef, fileme.value).then((snapshot) => {
-    console.log("storage", snapshot);
   });
   try {
     await stogegetDownloadURL(
       storageRef(storage, fileme.value.name.toString())
     ).then((url) => {
-      console.log(url);
       image.value = url;
     });
     const docRef = await addDoc(collection(db, "iam"), {
@@ -515,10 +513,9 @@ async function Add() {
     openedAddModal.value = false;
     await getDatawithAllTabs(); // Load all the data again
     (uniqe.value = uniqid()((name.value = ""))),
-      (description.value = ""),
-      console.log("Document written with ID: ", docRef.id);
+      (description.value = "")
   } catch (e) {
-    console.error("Error adding document: ", e);
+    return e;
   }
 }
 
@@ -552,7 +549,6 @@ const addOrder = (item, quantity = 1) => {
     order_quantity: quantity,
   };
   orders.value = [...orders.value, { ...newOrder }];
-  console.log("ORDERS", orders.value);
 };
 async function placeOrder() {
   try {
@@ -565,7 +561,6 @@ async function placeOrder() {
       orderId: "ORDER#" + currentYear + uniqe.value,
       // Pass the orders value to the "customerorder" collection
     });
-    console.log("docRef ", docRef);
     const dialog = $q.dialog({
       title: "Uploading...",
       dark: true,
@@ -601,9 +596,8 @@ async function placeOrder() {
     }, 300);
     orders.value = [];
     uniqe.value = uniqid();
-    console.log("Document written with ID: ", docRef.id);
   } catch (e) {
-    console.error("Error adding document: ", e);
+return e;
   }
 }
 const totalAmount = computed(() => {
@@ -644,10 +638,8 @@ onServerPrefetch(async () => {
     // console.log(uuid.value)
     if (user) {
       isLoggedIn.value = true;
-      console.log(isLoggedIn.value);
     } else {
       isLoggedIn.value = false;
-      console.log(isLoggedIn.value);
     }
   });
 });
@@ -659,8 +651,7 @@ if (user != null) {
   uid = user.uid;
 }
 watch(tab, (newTab, oldTab) => {
-  console.log("tab", tab);
-  console.log("tab", newTab);
+
 
   // Unsubscribe from the previous query (if any)
   if (unsubscribe.value) {
@@ -695,13 +686,11 @@ watch(tab, (newTab, oldTab) => {
       }
       if (change.type === "modified") {
         datassss.value.pop(data);
-        console.log("Modified data: ", data);
       }
       if (change.type === "removed") {
         const index = datassss.value.findIndex(
           (d) => d.name === change.doc.data().name
         );
-        console.log("Removed city: ", change.doc.data(), change.doc.id);
         datassss.value.splice(index, 1);
       }
     });
@@ -713,11 +702,9 @@ const handleSignOut = () => {
     .then(() => {
       // Sign-out successful.
       router.push("/sign-in");
-      console.log("Sign-out successful.");
     })
     .catch((error) => {
       router.push("/");
-      console.log(error);
     });
 };
 
@@ -735,7 +722,6 @@ async function editData(item, itemId) {
 }
 async function saveEdit() {
   editModal.value = false;
-  console.log("tehatal");
 
   const updatedData = {
     name: name.value,
@@ -770,13 +756,12 @@ async function getDatawithAllTabs() {
           datassss.value.push(data);
         }
         if (change.type === "modified") {
-          console.log("Modified city: ", data);
+          console.log("Modified:");
         }
         if (change.type === "removed") {
           const index = datassss.value.findIndex(
             (d) => d.name === change.doc.data().name
           );
-          console.log("Removed city: ", change.doc.data(), change.doc.id);
           datassss.value.splice(index, 1);
         }
       });
