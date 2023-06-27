@@ -4,7 +4,12 @@
     <div class="col-4">
       <q-separator
         vertical
-        style="color: #d8dbd9; height: 100vh; position: fixed"
+        style="
+          color: #d8dbd9;
+          height: 100vh;
+          position: fixed;
+          margin-left: 15px;
+        "
       />
     </div>
   </div>
@@ -71,6 +76,15 @@
                   <q-td key="qty" :props="props">
                     {{ props.row.order_quantity }}
                   </q-td>
+                  <q-td key="actions" :props="props">
+                    <q-btn
+                      @click="
+                        removeItem(props.row.itemId, orderId, props.row.name)
+                      "
+                      color="red"
+                      icon="delete"
+                    />
+                  </q-td>
                   <!-- <q-td key="actions" :props="props">
                     <q-btn
                       dense
@@ -108,7 +122,7 @@
                   <div class="flex justify-between items-center">
                     <div>
                       <div class="text-subtitle2 text-uppercase">
-                        Add Cash Received
+                        Add Cash Received:
                       </div>
                     </div>
                     <div>
@@ -157,7 +171,7 @@
             </div>
             <div class="q-mt-xl">
               <q-btn
-                v-if="!cashReceived || cashReceived < totalPrice"
+                v-if="!cashReceived || cashReceived < totalPrice || !totalPrice"
                 disabled
                 style="background: #8bb5be; width: 100%"
                 class="text-uppercase text-h5"
@@ -198,6 +212,8 @@ import {
   updateDoc,
   getDocs,
   Timestamp,
+  arrayRemove,
+  setDoc,
 } from "firebase/firestore";
 
 const columns = [
@@ -211,24 +227,25 @@ const columns = [
   },
   {
     name: "price",
-    align: "center",
+    align: "left",
     label: "PRICE",
     field: (row) => row.price,
     sortable: true,
   },
   {
     name: "qty",
+    align: "left",
     label: "QTY",
     field: (row) => row.order_quantity,
     sortable: true,
   },
-  // {
-  //   name: "actions",
-  //   align: "center",
-  //   label: "Actions",
-  //   field: "actions",
-  //   sortable: false,
-  // },
+  {
+    name: "actions",
+    align: "right",
+    label: "Actions",
+    field: "actions",
+    sortable: true,
+  },
 ];
 
 export default {
@@ -326,38 +343,6 @@ export default {
       orders.value = orders.value.filter((order) => order.orderId !== orderId);
     }
 
-    // async function removeRow(row) {
-    //   try {
-    //     const confirm = await $q.dialog({
-    //       title: "Confirmation",
-    //       message: "Are you sure you want to remove this item?",
-    //       cancel: true,
-    //       persistent: true,
-    //     });
-
-    //     if (confirm) {
-    //       // Remove the row from the table
-    //       const orderId = row.orderId;
-    //       const index = segregatedOrders.value[orderId].findIndex(
-    //         (item) => item.name === row.name
-    //       );
-    //       if (index !== -1) {
-    //         segregatedOrders.value[orderId].splice(index, 1);
-    //       }
-
-    //       // Update the database or perform any other necessary actions
-
-    //       $q.notify({
-    //         message: "Item removed successfully!",
-    //         position: "top",
-    //         timeout: 2000,
-    //       });
-    //     }
-    //   } catch (error) {
-    //     console.error("Error while removing item:", error);
-    //   }
-    // }
-
     async function paynow() {
       const currentUser = getAuth().currentUser;
       if (currentUser) {
@@ -432,6 +417,48 @@ export default {
       }
     }
 
+    async function removeItem(itemId, orderId, itemName) {
+      try {
+        const db = getFirestore(app1);
+
+        // Create a query to find the order document based on the orderId
+        const orderQuery = query(
+          collection(db, "orders"),
+          where("orderId", "==", orderId)
+        );
+
+        // Execute the query and get the matching documents
+        const orderSnapshot = await getDocs(orderQuery);
+
+        if (!orderSnapshot.empty) {
+          // Get the first document from the query snapshot
+          const orderDoc = orderSnapshot.docs[0];
+          const orderRef = doc(db, "orders", orderDoc.id);
+
+          // Get the order data
+          const orderData = orderDoc.data();
+
+          // Find the index of the item in the "orders" array
+          const itemIndex = orderData.orders.findIndex(
+            (item) => item.itemId === itemId && item.name === itemName
+          );
+
+          // Remove the item from the "orders" array
+          if (itemIndex !== -1) {
+            orderData.orders.splice(itemIndex, 1);
+
+            // Update the order document with the modified "orders" array
+            await setDoc(orderRef, orderData);
+          }
+
+          // Refresh the data after removing the item
+          await getData();
+        }
+      } catch (error) {
+        console.error("Error removing item:", error);
+      }
+    }
+
     watch(selectedTables, (newValue) => {
       if (newValue.length === 0) {
         cashReceived.value = null;
@@ -441,6 +468,7 @@ export default {
     onMounted(getData);
 
     return {
+      removeItem,
       loading,
       paynow,
       selectedTables,
