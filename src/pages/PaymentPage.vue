@@ -196,7 +196,14 @@
 </template>
 
 <script>
-import { ref, getCurrentInstance, onMounted, computed, watch } from "vue";
+import {
+  ref,
+  getCurrentInstance,
+  onMounted,
+  computed,
+  watch,
+  onBeforeUnmount,
+} from "vue";
 import { useQuasar, Notify } from "quasar";
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
@@ -259,6 +266,7 @@ export default {
     const app = getCurrentInstance().appContext.config.globalProperties;
     const app1 = initializeApp(app.$firebaseConfig);
     const db = getFirestore(app1);
+    let timer;
 
     const pagination = ref({
       page: 1,
@@ -305,6 +313,7 @@ export default {
 
     async function getData() {
       const currentUser = getAuth().currentUser;
+      $q.loading.hide();
       if (currentUser) {
         const q = query(collection(db, "orders"));
         const querySnapshot = await getDocs(q);
@@ -452,6 +461,15 @@ export default {
           }
 
           // Refresh the data after removing the item
+          setTimeout(() => {
+            loading.value = false;
+            $q.notify({
+              message: "Item Removed successfully!",
+              position: "top",
+              timeout: 2000,
+              color: "red",
+            });
+          }, 500);
           await getData();
         }
       } catch (error) {
@@ -465,7 +483,21 @@ export default {
       }
     });
 
-    onMounted(getData);
+    onMounted(() => {
+      getData();
+      $q.loading.show();
+      timer = setTimeout(() => {
+        $q.loading.hide();
+        timer = void 0;
+      }, 2000);
+    });
+
+    onBeforeUnmount(() => {
+      if (timer !== void 0) {
+        clearTimeout(timer);
+        $q.loading.hide();
+      }
+    });
 
     return {
       removeItem,
@@ -482,6 +514,7 @@ export default {
       cancelOrder,
       dense: ref(false),
       pagination,
+      timer,
       // removeRow,
     };
   },
