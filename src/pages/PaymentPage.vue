@@ -366,6 +366,17 @@ export default {
         if (matchingOrders.length > 0) {
           const totalCashReceived = cashReceived.value;
           const totalAmount = totalPrice.value;
+
+          if (!totalCashReceived || totalCashReceived < totalAmount) {
+            $q.notify({
+              message: "Please input cash received",
+              position: "top",
+              timeout: 2000,
+              color: "red",
+            });
+            return;
+          }
+
           const change = totalCashReceived - totalAmount;
 
           try {
