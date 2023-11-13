@@ -1,6 +1,5 @@
 <template>
   <div>
-
     <div>
       <!-- <q-file v-model="fileme" label="Standard" />
       <q-btn
@@ -72,15 +71,15 @@
     <div class="row">
       <div class="col-9 row" style="align-items: flex-start">
         <q-btn
-      class="q-ma-md"
-      style="background-color: #d8e6e9 !important"
-      icon="add"
-      label="Add Product"
-      @click="addModal()"
-      flat
-      dense
-    >
-    </q-btn>
+          class="q-ma-md"
+          style="background-color: #d8e6e9 !important"
+          icon="add"
+          label="Add Product"
+          @click="addModal()"
+          flat
+          dense
+        >
+        </q-btn>
 
         <q-tabs
           class="q-ma-sm col-11 row"
@@ -317,37 +316,11 @@
               <q-input v-model="name" label="Item name" />
               <q-input v-model="specifications" label="Specifications" />
               <q-select
-              v-model="category"
-              :options="optionsCategory"
-              label="Category"
-            />
+                v-model="category"
+                :options="optionsCategory"
+                label="Category"
+              />
               <q-input v-model="price" label="Price" />
-              <!-- <q-file
-                filled
-                bottom-slots
-                v-model="fileme"
-                label="Product Image"
-                counter
-              >
-                <template v-slot:prepend>
-                  <q-icon name="cloud_upload" @click.stop.prevent />
-                </template>
-                <template v-slot:append>
-                  <q-icon
-                    name="close"
-                    @click.stop.prevent="fileme = null"
-                    class="cursor-pointer"
-                  />
-                </template>
-              </q-file>
-              <div v-if="fileme">
-                <img
-                  style="max-width: 200px; max-height: 200px"
-                  :src="fileme"
-                  alt="productImage"
-                />
-              </div>
-            </div> -->
             </div>
           </q-card-section>
 
@@ -489,8 +462,7 @@ let auth;
 async function Add() {
   const forestRef = ref(storage, fileme.value.name.toString());
   const mountainsRef = storageRef(storage, fileme.value.name.toString());
-  await app.$uploadBytes(mountainsRef, fileme.value).then((snapshot) => {
-  });
+  await app.$uploadBytes(mountainsRef, fileme.value).then((snapshot) => {});
   try {
     await stogegetDownloadURL(
       storageRef(storage, fileme.value.name.toString())
@@ -512,8 +484,7 @@ async function Add() {
     });
     openedAddModal.value = false;
     await getDatawithAllTabs(); // Load all the data again
-    (uniqe.value = uniqid()((name.value = ""))),
-      (description.value = "")
+    (uniqe.value = uniqid()((name.value = ""))), (description.value = "");
   } catch (e) {
     return e;
   }
@@ -597,7 +568,7 @@ async function placeOrder() {
     orders.value = [];
     uniqe.value = uniqid();
   } catch (e) {
-return e;
+    return e;
   }
 }
 const totalAmount = computed(() => {
@@ -628,9 +599,6 @@ async function confirmed() {
   await getDatawithAllTabs(); // Load all the data again
 }
 
-
-
-
 onServerPrefetch(async () => {
   auth = getAuth();
   onAuthStateChanged(auth, (user) => {
@@ -651,8 +619,6 @@ if (user != null) {
   uid = user.uid;
 }
 watch(tab, (newTab, oldTab) => {
-
-
   // Unsubscribe from the previous query (if any)
   if (unsubscribe.value) {
     unsubscribe.value();
@@ -716,7 +682,7 @@ async function editData(item, itemId) {
   name.value = item.name;
   specifications.value = item.specifications;
   price.value = item.price;
-  category.value = item.category
+  category.value = item.category;
   editModal.value = true;
   docId.value = itemId; // Assign the document ID to the docId.value variable
 }
@@ -725,47 +691,46 @@ async function saveEdit() {
 
   const updatedData = {
     name: name.value,
-    category:category.value,
+    category: category.value,
     specifications: specifications.value,
     price: price.value,
   };
 
   await updateDoc(doc(db, "iam", docId.value), updatedData);
   await getDatawithAllTabs(); // Load all the data again
-
 }
 
 async function getDatawithAllTabs() {
   // Set the initial tab value to "starter"
 
-    tab.value = "all";
+  tab.value = "all";
 
-    // Update the Firestore query with the initial tab value
-    q.value = query(collection(db, "iam"), where("userid", "==", uuid.value));
+  // Update the Firestore query with the initial tab value
+  q.value = query(collection(db, "iam"), where("userid", "==", uuid.value));
 
-    // Subscribe to the query and update data
-    unsubscribe.value = onSnapshot(q.value, (snapshot) => {
-      datassss.value = []; // Clear previous data
+  // Subscribe to the query and update data
+  unsubscribe.value = onSnapshot(q.value, (snapshot) => {
+    datassss.value = []; // Clear previous data
 
-      snapshot.docChanges().forEach((change) => {
-        var data = {
-          ...change.doc.data(),
-          ...{ id: change.doc.id },
-        };
-        if (change.type === "added") {
-          datassss.value.push(data);
-        }
-        if (change.type === "modified") {
-          console.log("Modified:");
-        }
-        if (change.type === "removed") {
-          const index = datassss.value.findIndex(
-            (d) => d.name === change.doc.data().name
-          );
-          datassss.value.splice(index, 1);
-        }
-      });
+    snapshot.docChanges().forEach((change) => {
+      var data = {
+        ...change.doc.data(),
+        ...{ id: change.doc.id },
+      };
+      if (change.type === "added") {
+        datassss.value.push(data);
+      }
+      if (change.type === "modified") {
+        console.log("Modified:");
+      }
+      if (change.type === "removed") {
+        const index = datassss.value.findIndex(
+          (d) => d.name === change.doc.data().name
+        );
+        datassss.value.splice(index, 1);
+      }
     });
+  });
 }
 
 onMounted(async () => {

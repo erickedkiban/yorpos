@@ -10,6 +10,8 @@ const routes = [
   },
 
   { path: "/register", component: () => import("pages/RegisterPage.vue") },
+  { path: "/login", component: () => import("pages/Login.vue") },
+
   { path: "/sign-in", component: () => import("pages/SignIn.vue") },
   // {
   //   path: "/feed",

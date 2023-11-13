@@ -10,7 +10,12 @@
       v-model:pagination="pagination"
     >
       <template v-slot:top-right>
-        <q-btn label="Print Report" icon="print" color="primary" />
+        <q-btn
+          @click="printReport"
+          label="Print Report"
+          icon="print"
+          color="primary"
+        />
       </template>
 
       <template v-slot:pagination="scope">
@@ -65,6 +70,9 @@ import { ref, onMounted, getCurrentInstance, computed } from "vue";
 import { getAuth } from "firebase/auth";
 import { initializeApp } from "firebase/app";
 import { getFirestore, collection, query, getDocs } from "firebase/firestore";
+import pdfMake from "pdfmake/build/pdfmake";
+import pdfFonts from "pdfmake/build/vfs_fonts";
+pdfMake.vfs = pdfFonts.pdfMake.vfs;
 
 export default {
   setup() {
@@ -97,6 +105,59 @@ export default {
     onMounted(() => {
       getData();
     });
+
+    const printReport = () => {
+      // Assuming orders is your data structure containing the orders array
+      const ordersData = orders.value;
+
+      // Check if ordersData is defined and not empty
+      if (ordersData && ordersData.length > 0) {
+        // Extracting data from nested orders array and formatting it into reportData
+        const reportData = ordersData
+          .map((order) => {
+            if (order.orders && order.orders.length > 0) {
+              return order.orders.map((innerOrder) => [
+                innerOrder.orders.map((data) => [data.name]),
+                innerOrder.orders.map((data) => [data.category]),
+                innerOrder.orders.map((data) => [data.order_quantity]),
+                innerOrder.orders.map((data) => [data.price]),
+              ]);
+            }
+            return [];
+          })
+          .flat(); // Flatten the array
+
+        const documentDefinition = {
+          content: [
+            { text: "YorPos Report", style: "header" },
+            {
+              style: "tableExample",
+              table: {
+                body: [
+                  ["Item Name", "Item Category", "Order Quantity", "Item Price"],
+                  ...reportData,
+                ],
+              },
+              layout: "lightHorizontalLines",
+            },
+          ],
+          styles: {
+            header: {
+              fontSize: 18,
+              bold: true,
+              margin: [0, 0, 0, 10],
+            },
+            tableExample: {
+              margin: [0, 5, 0, 15],
+            },
+          },
+        };
+
+        pdfMake.createPdf(documentDefinition).download("YourPosReport.pdf");
+      } else {
+        console.error("No orders data available");
+      }
+    };
 
     // Computed property to extract the orderId and timestamp
     const computedOrders = computed(() => {
@@ -140,7 +201,7 @@ export default {
       {
         name: "orderDate",
         required: true,
-        label: "Order Date",
+        label: "Payment Date",
         align: "center",
         field: "timestamp",
         format: (value) => value.toLocaleString(),
@@ -178,6 +239,7 @@ export default {
       pagination,
       getData,
       computedTotalQuantity,
+      printReport,
     };
   },
 };

@@ -213,7 +213,7 @@
             class="GPL__side-btn"
           >
           <q-avatar size="30px">
-            <img src="https://cdn.quasar.dev/img/boy-avatar.png">
+            <img :src="photoURL">
           <q-tooltip>{{displayName}}</q-tooltip>
             </q-avatar>
           </q-btn>

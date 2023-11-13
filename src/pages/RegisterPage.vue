@@ -1,25 +1,47 @@
-<template >
+<template>
   <div>
-    <div class="q-pa-lg row justify-center" >
-
+    <div class="q-pa-lg row justify-center">
       <q-card class="my-card flat unbordered" flat unbordered s>
-<img
-      alt="Quasar logo"
-      src="~assets/yorpost.png"
-    >
-      <q-card-section>
-        <div class="text-h6">   <q-input label="Email"  outlined v-model="email"></q-input></div> <br />
-        <div class="text-subtitle2">      <q-input label="Password" outlined v-model="password"></q-input></div>
-        <div class="q-mt-sm" align="right">  <q-chip align="left" v-if="errMsg" outline square color="deep-orange" text-color="white" icon="warning">{{errMsg}}</q-chip><span v-if="!errMsg" clickable @click="toLogin" text-color="red" color="deep-orange" >Already register?</span> </div>
-      </q-card-section>
+        <img alt="Quasar logo" src="~assets/yorpost.png" />
+        <q-card-section>
+          <div class="text-h6">
+            <q-input label="Email" outlined v-model="email"></q-input>
+          </div>
+          <br />
+          <div class="text-subtitle2">
+            <q-input label="Password" outlined v-model="password"></q-input>
+          </div>
+          <div class="q-mt-sm" align="right">
+            <q-chip
+              align="left"
+              v-if="errMsg"
+              outline
+              square
+              color="deep-orange"
+              text-color="white"
+              icon="warning"
+              >{{ errMsg }}</q-chip
+            ><span
+              v-if="!errMsg"
+              clickable
+              @click="toLogin"
+              text-color="red"
+              color="deep-orange"
+              >Already register?</span
+            >
+          </div>
+        </q-card-section>
 
-
-      <q-card-actions flat unbordered align="center" class="q-mt-lg">
-        <q-btn color="teal-4"  @click="register">Register</q-btn>
-        <q-btn @click="SignInWithGoogle" color="teal-4"  icon-right="g_translate" label="Register with google" />
-      </q-card-actions>
-    </q-card>
-
+        <q-card-actions flat unbordered align="center" class="q-mt-lg">
+          <q-btn color="teal-4" @click="register">Register</q-btn>
+          <q-btn
+            @click="SignInWithGoogle"
+            color="teal-4"
+            icon-right="g_translate"
+            label="Register with google"
+          />
+        </q-card-actions>
+      </q-card>
     </div>
   </div>
 </template>
@@ -47,18 +69,18 @@ const register = () => {
       alert(error.message);
     });
 };
-const toLogin = () =>{
-  router.push("/sign-in")
-}
+const toLogin = () => {
+  router.push("/sign-in");
+};
 const SignInWithGoogle = () => {
   const provider = new GoogleAuthProvider();
   signInWithPopup(getAuth(), provider)
     .then((result) => {
-        console.log(result.user);
-        router.push("/feed")
+      console.log(result.user);
+      router.push("/feed");
     })
     .catch((error) => {
-        console.log(error)
+      console.log(error);
     });
 };
 </script>

@@ -8,7 +8,6 @@ import {
   ref,
   uploadBytes,
   getMetadata,
-  getDownloadURL,
   listAll,
 } from "firebase/storage";
 
